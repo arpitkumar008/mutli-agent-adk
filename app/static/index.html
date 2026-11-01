@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PolicyGuard</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">PolicyGuard</div>
+        <div class="brand-sub">Pre-merge policy checker</div>
+      </div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-title">How it works</div>
+      <ol class="flow">
+        <li><b>Input guardrail</b><span>Blocks empty, huge or injected input</span></li>
+        <li><b>Policy retriever</b><span>RAG search over ChromaDB</span></li>
+        <li><b>Code validator</b><span>Checks code against each policy</span></li>
+        <li><b>Verifier</b><span>Proves the right policies were used</span></li>
+        <li><b>Output guardrail</b><span>Redacts secrets in the report</span></li>
+      </ol>
+    </div>
+
+    <div class="side-section">
+      <div class="side-title">Try a sample</div>
+      <button class="sample" data-sample="bad">
+        <span class="sample-dot red"></span> Violating code
+      </button>
+      <button class="sample" data-sample="good">
+        <span class="sample-dot green"></span> Compliant code
+      </button>
+      <button class="sample" data-sample="inject">
+        <span class="sample-dot gray"></span> Prompt injection
+      </button>
+    </div>
+
+    <div class="side-footer">
+      <button id="theme" class="ghost" title="Toggle theme">Toggle theme</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1>Code policy review</h1>
+        <p>Paste a code change and get a pass/fail result per policy.</p>
+      </div>
+      <button id="clear" class="ghost">New chat</button>
+    </header>
+
+    <section id="chat" class="chat">
+      <div id="welcome" class="welcome">
+        <div class="welcome-icon">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+        </div>
+        <h2>Is your code policy-compliant?</h2>
+        <p>Paste your code below, or pick a sample from the sidebar.</p>
+      </div>
+    </section>
+
+    <footer class="composer">
+      <div class="composer-box">
+        <textarea id="code" spellcheck="false" placeholder="Paste your code here..."></textarea>
+        <div class="composer-bar">
+          <span id="counter" class="counter">0 lines &middot; 0 / 20000</span>
+          <div class="composer-actions">
+            <span class="kbd">Ctrl + Enter</span>
+            <button id="send" class="primary">Validate</button>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

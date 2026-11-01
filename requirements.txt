@@ -1,0 +1,9 @@
+google-adk[extensions]
+litellm
+mcp
+fastapi
+uvicorn[standard]
+chromadb
+pypdf
+python-dotenv
+pydantic
