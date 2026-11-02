@@ -2,7 +2,7 @@
 
 An AI system that checks whether a proposed code change violates an organization's engineering policies before it is merged.
 
-**Stack:** Google ADK (2 agents) · FastAPI · ChromaDB (RAG, local embeddings) · LiteLLM (OpenRouter) · input + output guardrails · deterministic verifier
+**Stack:** Google ADK (2 agents) · Gemini API · FastAPI · ChromaDB (RAG with Gemini embeddings) · input + output guardrails · deterministic verifier
 
 ## How it works
 
@@ -50,14 +50,12 @@ Passwords, API keys and tokens must never be written in source code.
 ## Requirements
 
 - Python 3.10+
-- An [OpenRouter](https://openrouter.ai) API key
+- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 
 `requirements.txt`:
 
 ```
-google-adk[extensions]
-litellm
-mcp
+google-adk
 fastapi
 uvicorn[standard]
 chromadb
@@ -109,20 +107,21 @@ uvicorn app.main:app --reload
 Create a file named `.env` (not `.env.txt`) in the project root:
 
 ```
-OPENROUTER_API_KEY=your_openrouter_key_here
-LLM_MODEL=openrouter/openai/gpt-4o-mini
+GOOGLE_API_KEY=your_gemini_key_here
+GOOGLE_GENAI_USE_VERTEXAI=FALSE
+LLM_MODEL=gemini-3.5-flash-lite
+EMBED_MODEL=gemini-embedding-001
 TOP_K=5
 ```
 
-- The model string is `openrouter/` followed by the OpenRouter model ID.
-- Use a model that supports **tool calling** (the Retriever agent calls the RAG tool). Free `:free` models are often rate-limited and unreliable at tool calling.
 - Restart the server after editing `.env`; `--reload` does not re-read it.
+- If Gemini is overloaded (503 / 429 errors), try `LLM_MODEL=gemini-2.5-flash-lite`.
 
 ## Using the app
 
 Open **http://127.0.0.1:8000/**, paste code into the chat box, and press **Validate** (or Ctrl+Enter).
 
-The first start downloads the local embedding model (~80 MB) and prints `Ingested N policies into ChromaDB`.
+On the first start you should see `[config] Using model: ...` and `Ingested N policies into ChromaDB`.
 
 Only two endpoints exist:
 
@@ -148,7 +147,7 @@ curl -X POST http://127.0.0.1:8000/validate -H "Content-Type: application/json" 
 
 ## Common tasks
 
-**Add or change policies** — edit files in `policies/`, then restart the server. If the policy store already has data it is not rebuilt automatically, so delete the `chroma_db/` folder first:
+**Add or change policies** — edit files in `policies/`, delete the old vector store, then restart:
 
 ```powershell
 Remove-Item -Recurse -Force chroma_db
@@ -157,7 +156,7 @@ uvicorn app.main:app --reload
 
 macOS / Linux: `rm -rf chroma_db`
 
-**Switch model** — change only `LLM_MODEL` in `.env` and restart.
+**Switch Gemini model** — change only `LLM_MODEL` in `.env` and restart.
 
 **Deactivate the virtual environment** — `deactivate`
 
@@ -165,11 +164,11 @@ macOS / Linux: `rm -rf chroma_db`
 
 | Problem | Fix |
 |---|---|
-| `LLM Provider NOT provided` | `LLM_MODEL` is missing the `openrouter/` prefix, or a stale Windows variable overrides `.env`. Check with `echo $env:LLM_MODEL` and clear with `Remove-Item Env:LLM_MODEL` |
-| `LiteLLM support requires: pip install google-adk[extensions]` | `pip install "google-adk[extensions]"` |
-| `No module named 'mcp'` | `pip install mcp` |
-| `AuthenticationError` | Wrong or missing `OPENROUTER_API_KEY`; restart the server after fixing `.env` |
-| `UNVERIFIED` with `retrieval_happened: false` | The model did not call the RAG tool; switch to a model with reliable tool calling |
-| `UNVERIFIED` with "Validator output unusable" | The model did not return valid JSON; try a stronger model |
+| `API key not valid` / `PermissionDenied` | Wrong or missing `GOOGLE_API_KEY`; fix `.env` and restart the server |
+| `503 UNAVAILABLE` / `429 RESOURCE_EXHAUSTED` | Gemini is overloaded or rate-limited; wait a minute or use `gemini-2.5-flash-lite` |
+| Stale model name in startup log | A Windows variable overrides `.env`. Check with `echo $env:LLM_MODEL` and clear with `Remove-Item Env:LLM_MODEL` |
+| Embedding dimension error from Chroma | Old vector store from another embedding model; delete the `chroma_db/` folder |
+| `UNVERIFIED` with `retrieval_happened: false` | The model did not call the RAG tool; retry or use a stronger model |
+| `UNVERIFIED` with "Validator output unusable" | The model returned unusable output; retry |
 | `404` on `/docs` | Expected; docs are disabled. Use `/` |
 | Old UI after changes | Hard refresh with Ctrl+F5 |
