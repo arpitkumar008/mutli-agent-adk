@@ -1,5 +1,6 @@
 """Deterministic verification: no LLM involved."""
 import json
+import re
 from pydantic import BaseModel
 
 from . import rag
@@ -11,10 +12,8 @@ def _parse(raw) -> dict:
     if isinstance(raw, dict):
         return raw
     if isinstance(raw, str):
-        start, end = raw.find("{"), raw.rfind("}")
-        if start == -1 or end == -1:
-            raise ValueError("no JSON object in validator output")
-        return json.loads(raw[start:end + 1])
+        cleaned = re.sub(r"^```(?:json)?|```$", "", raw.strip(), flags=re.MULTILINE).strip()
+        return json.loads(cleaned)
     raise ValueError("validator produced no output")
 
 

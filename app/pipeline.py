@@ -14,7 +14,7 @@ from .verifier import verify
 session_service = InMemorySessionService()
 runner = Runner(agent=root_agent, app_name=APP_NAME, session_service=session_service)
 
-REINGEST_COOLDOWN = 60  # seconds; stops repeated injections from spamming the embedding API
+REINGEST_COOLDOWN = 60  
 _last_reingest = 0.0
 
 
